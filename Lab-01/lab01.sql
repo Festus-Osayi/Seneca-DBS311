@@ -1,0 +1,260 @@
+/* Name       : Festus Osayi
+Oracle user ID: dbs211_223zaa20
+Student ID    : 170276216
+Date          : 1-15-2023
+File purpose  : DBS311Lab 01
+********************************/
+SET AUTOCOMMIT ON;
+
+--1.Create the following tables in your Oracle account using the lab handout Create Patient and Insurance:
+-- Creating a patient table with the sample provided by the professor
+CREATE TABLE PATIENT (
+	PATIENTNO NUMBER(3, 0) NOT NULL,
+	FIRSTNAME CHAR(15) NOT NULL,
+	LASTNAME CHAR(15) NOT NULL,
+	PINSURNUM NUMBER(3, 0) NOT NULL
+);
+
+--inserting values into patient table
+INSERT INTO PATIENT VALUES(
+	123,
+	'Karen',
+	'Wong',
+	555
+);
+
+INSERT INTO PATIENT VALUES(
+	456,
+	'Bill',
+	'Trimble',
+	666
+);
+
+INSERT INTO PATIENT VALUES(
+	789,
+	'Tom',
+	'Seaver',
+	888
+);
+
+INSERT INTO PATIENT VALUES(
+	246,
+	'John',
+	'Howard',
+	0
+);
+
+SELECT
+	*
+FROM
+	PATIENT;
+
+-- Creating an insurancetable with the sample provided by the professor
+CREATE TABLE INSURANCE (
+	INSNUM NUMBER(3, 0) NOT NULL,
+	INSURENAME CHAR(20) NOT NULL,
+	INSPHONE NUMBER(10, 0) NOT NULL
+);
+
+--inserting values into insurance table
+INSERT INTO INSURANCE VALUES(
+	555,
+	'Manulife',
+	7056663344
+);
+
+INSERT INTO INSURANCE VALUES(
+	666,
+	'TD Insurance',
+	4167774444
+);
+
+INSERT INTO INSURANCE VALUES(
+	888,
+	'Cut Rate Insurers',
+	9058883333
+);
+
+INSERT INTO INSURANCE VALUES(
+	444,
+	'SureHealth Ins',
+	6132225555
+);
+
+--2.Be prepared to produce the following output for your professor in the lab
+--Inner join
+SELECT
+	PATIENT.PATIENTNO,
+	PATIENT.FIRSTNAME,
+	PATIENT.LASTNAME,
+	PATIENT.PINSURNUM,
+	INSURANCE.INSURENAME,
+	INSURANCE.INSPHONE
+FROM
+	PATIENT
+	INNER JOIN INSURANCE
+	ON PATIENT.PINSURNUM = INSURANCE.INSNUM;
+
+--Right join
+SELECT
+	PATIENT.PATIENTNO,
+	PATIENT.FIRSTNAME,
+	PATIENT.LASTNAME,
+	PATIENT.PINSURNUM,
+	INSURANCE.INSURENAME,
+	INSURANCE.INSPHONE
+FROM
+	PATIENT
+	RIGHT OUTER JOIN INSURANCE
+	ON PATIENT.PINSURNUM = INSURANCE.INSNUM;
+
+--Full outer join
+SELECT
+	PATIENT.PATIENTNO,
+	PATIENT.FIRSTNAME,
+	PATIENT.LASTNAME,
+	PATIENT.PINSURNUM,
+	INSURANCE.INSURENAME,
+	INSURANCE.INSPHONE
+FROM
+	PATIENT
+	FULL OUTER JOIN INSURANCE
+	ON PATIENT.PINSURNUM = INSURANCE.INSNUM;
+
+--3.Be prepared to produce the following output for your professor in the lab
+SELECT
+	PATIENT.PATIENTNO,
+	PATIENT.FIRSTNAME,
+	PATIENT.LASTNAME,
+	PATIENT.PINSURNUM,
+	NVL(INSURANCE.INSURENAME,
+	'not allocated yet') INSURENAME,
+	INSURANCE.INSPHONE
+FROM
+	PATIENT
+	LEFT OUTER JOIN INSURANCE
+	ON PATIENT.PINSURNUM = INSURANCE.INSNUM;
+
+--4.Adjust your tables so you can demonstrate enforcing referential integrity
+-- adding a primaty key constraints on insurance table(insnum).
+ALTER TABLE INSURANCE ADD CONSTRAINT INSNUM_PK PRIMARY KEY (INSNUM);
+
+--deleting the howard row in other to enforce referential integrity
+DELETE FROM PATIENT
+WHERE
+	PATIENTNO = 246;
+
+-- adding a Foreign key constraints on patient table(pinsurnum).
+--Which references the insurance table(insnum).
+ALTER TABLE PATIENT ADD CONSTRAINT PATIENT_PINSURNUM FOREIGN KEY(PINSURNUM) REFERENCES INSURANCE(INSNUM);
+
+--5. Find the Oracle equivalent for the following DB2 statement:
+SELECT
+	TO_CHAR(SYSDATE,
+	'fmMonth')|| ' '|| TO_CHAR(SYSDATE + 1,
+	'fmdd') ||''||'th of year '|| TO_CHAR(SYSDATE,
+	+ 'YYYY') AS TOMORROW
+FROM
+	DUAL;
+
+--6.Make a copy of your patient table with data in PATIENT3, add a birthdate column with appropriate data and put back John Howard.
+--making a copy of patient table as patient3..
+CREATE TABLE PATIENT3 AS (
+	SELECT * FROM PATIENT
+);
+
+-- creating the birthdate column and inserting the proper data.
+ALTER TABLE PATIENT3 ADD BIRTHDATE DATE;
+
+-- inserting howard appropriate data..
+INSERT INTO PATIENT VALUES(
+	246,
+	'John',
+	'Howard',
+	444
+);
+
+UPDATE PATIENT3
+SET
+	BIRTHDATE = '84-02-22'
+WHERE
+	PATIENTNO = 789;
+
+UPDATE PATIENT3
+SET
+	BIRTHDATE = '67-12-25'
+WHERE
+	PATIENTNO = 123;
+
+UPDATE PATIENT3
+SET
+	BIRTHDATE = '78-07-01'
+WHERE
+	PATIENTNO = 456;
+
+UPDATE PATIENT3
+SET
+	BIRTHDATE = '98-04-15'
+WHERE
+	PATIENTNO = 246;
+
+SELECT
+	*
+FROM
+	PATIENT3;
+
+-- Checking to see if the appropraite data was insert correctly..
+SELECT
+	*
+FROM
+	PATIENT3;
+
+-- 7
+SELECT
+	FIRSTNAME,
+	LASTNAME,
+	BIRTHDATE,
+	TRUNC(TO_NUMBER(SYSDATE - TO_DATE(BIRTHDATE)) / 365.25) AGE,
+	'born on a ' || TO_CHAR(BIRTHDATE,
+	'DAY')                                                  DAYOFBIRTH
+FROM
+	PATIENT3;
+
+--SOME CHARACTER FUNCTIONS:
+
+-- 8. SHOW THE INSURANCE COMPANY NAMES THAT END IN E
+SELECT
+	*
+FROM
+	INSURANCE
+WHERE
+	TRIM(INSURENAME) LIKE '%e';
+
+--9. PROVIDE THIS OUTPUT USING PATIENT3 AND INSURANCE (STRING HANDLING ON PATIENT NAME AND NUMERIC PHONE) (1 MARK)
+
+SELECT
+	PATIENT3.PATIENTNO,
+	CONCAT(PATIENT3.FIRSTNAME,
+	PATIENT3.LASTNAME) PATIENT,
+	INSURANCE.INSURENAME,
+	'(' || SUBSTR(INSURANCE.INSPHONE,
+	1,
+	3) || ')' || SUBSTR(INSURANCE.INSPHONE,
+	4,
+	3) || '-' || SUBSTR(INSURANCE.INSPHONE,
+	7)                 INS_TELEPHONE
+FROM
+	PATIENT3
+	JOIN INSURANCE
+	ON INSURANCE.INSNUM = PATIENT3.PINSURNUM
+ORDER BY
+	INSURANCE.INSPHONE;
+
+--10 DEMONSTRATE THE USE OF A VARIABLE IN A SELECT STATEMENT WHERE CLAUSE. (1 MARK)
+
+SELECT
+	*
+FROM
+	PATIENT3
+WHERE
+	PATIENT3.FIRSTNAME NOT LIKE 'K%';

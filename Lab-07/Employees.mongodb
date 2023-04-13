@@ -1,0 +1,138 @@
+// MongoDB Playground
+// Use Ctrl+Space inside a snippet or a string literal to trigger completions.
+
+const database = 'test';
+const collection = 'Employees';
+
+// The current database to use.
+use(database);
+
+// 2.Create a collection of your choosing. Something that stores data that is interesting to you. Mine is Employees.
+db.createCollection(collection);
+
+// Demonstrate a mongoDB command that lets you enter 3 documents into the collection at once. Include an Id for each document. For my audiobook collection I can save the audiobook titile, the author, the duration in minutes to listen to the audiobook, the narrator, the publisher and the date published.  That is 7 key value pairs. Then to prove this is not a relational database I can include in one of the documents something that is not in the other documents – the genre of Science Fiction for example.
+
+db.Employees.insertMany([
+  {
+    "_id": 1002,
+    lastName: "Murphy",
+    firstName: "Diane",
+    extension: "x5800",
+    email:  "dmurphy@classicmodelcars.com",
+    "Job Title": "President",
+    "Birth date": new Date("1985-07-16")
+  },
+
+  {
+    "_id": 1056,
+    lastName: "Patterson",
+    firstName: "Mary",
+    extension: "x4611",
+    email: "mpatterso@classicmodelcars.com",
+    "Job Title": "VP Sales",
+    "Birth date": new Date("1982-05-12")
+  },
+
+  {
+    "_id": 1076,
+    lastName: "Firrelli",
+    firstName: "Jeff",
+    extension: "x9273",
+    email: "jfirrelli@classicmodelcars.com",
+    "Job Title": "Sales Rep",
+    "Birth date": new Date("1992-02-08"),
+    reportsto: 1002
+  }
+])
+
+// Q4.Show all the documents in your collection.
+
+db.Employees.find()
+
+// Q5.Demonstrate how to remove a single document.  
+
+db.Employees.deleteOne({"_id": 1056});
+
+//Q6. Put that one deleted document back in but do not include the id this time. Then reshow all the documents in your collection.
+
+db.Employees.insertOne({
+    
+  lastName: "Patterson",
+  firstName: "Mary",
+  extension: "x4611",
+  email: "mpatterso@classicmodelcars.com",
+  "Job Title": "VP Sales",
+  "Birth date": new Date("1982-05-12")
+  
+})
+
+
+// reshow all the documents in your collection.
+db.Employees.find()
+
+// 7. Put in three more documents and show all the documents. The instructor will pick one document to find based on what you have in a key value pair.
+
+db.Employees.insertMany([
+  {
+    "_id": 1088,
+    lastName: "Patterson",
+    firstName: "William",
+    extension: "x4871",
+    email:  "wpatterson@classicmodelcars.com",
+    "Job Title": "Sales Manager (APAC)",
+    "Birth date": new Date("1992-02-18"),
+    reportsto: [1002, 1102]
+  },
+
+  {
+    "_id": 1102,
+    lastName: "Bondur",
+    firstName: "Gerard",
+    extension: "x5408",
+    email: "gbondur@classicmodelcars.com",
+    "Job Title": "VP president",
+    "Birth date": new Date("1994-08-19"),
+    isIntern: true
+  },
+
+  {
+    "_id": 1286,
+    lastName: "Tseng",
+    firstName: "Foon Yue",
+    extension: "x228",
+    email: "ftseng@classicmodelcars.com",
+    "Job Title": "Sales Rep",
+    "Birth date": new Date("1996-08-05")
+    
+    
+  },
+  
+])
+
+// reshow all the documents in your collection.
+db.Employees.find()
+
+db.Employees.deleteOne({lastName: "Patterson"})
+
+db.Employees.find()
+
+db.Employees.findOne({extension: "x228"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

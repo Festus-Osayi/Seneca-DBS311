@@ -1,0 +1,157 @@
+// MongoDB Playground
+// Use Ctrl+Space inside a snippet or a string literal to trigger completions.
+
+const database = 'test';
+const collection = 'restaurants';
+
+// The current database to use.
+use(database);
+
+// Create a new collection restaurants.
+db.createCollection(collection);
+
+// 1. Insert three documents in your collection that includes an array value of three or four elements for each new document. For two of those documents have different array elements. With the third document use the same array elements as your second document, but this time have them ordered differently. Also include a key value pair that includes a number that can be incremented and decremented. Finally have the value for one of your key value pairs set to null. This step does not need to be demonstrated.
+
+db.restaurants.insertMany([
+    {
+        "_id": 100,
+        restaurantsName: "Pizza Studio",
+        menu_items: ["Italian", "Pizzeria", "Vegetarian", "Organic"],
+        menu: 5,
+        price: 22.50
+
+    },
+
+    {
+        "_id": 101,
+        restaurantsName: "Basil Box",
+        menu_items: ["Focaccia", "Bruschetta", "Garlic Bread", "Caprese Salad"],
+        menu: 10,
+        price: 16.20
+    },
+
+    {
+        "_id": 102,
+        restaurantsName: "Tripadvisor",
+        menu_items: ["Caprese Salad", "Bruschetta", "Garlic Bread", "Focaccia"],
+        price: 30.10,
+        menu: 15,
+        isOrdered: null
+    }
+
+])
+
+//checking to see if the value was insert properly..
+db.restaurants.find().pretty()
+
+// 2. Demonstrate a successful search based on one element that exists in one of your arrays 
+
+db.restaurants.find({ menu_items: "Caprese Salad" }).limit(1).pretty()
+
+
+
+
+// Demonstrate a successful search that returns only one of the documents that have the same elements (it should miss the other document because the elements are in a different order). Demonstrate a successful search that returns both documents with the same elements.
+db.restaurants.find({ menu_items: ["Focaccia", "Bruschetta", "Garlic Bread", "Caprese Salad"] }).pretty()
+
+db.restaurants.find({ menu_items: { $all: ["Caprese Salad"] } }).pretty()
+
+// 4. Demonstrate a succesful search using $in. 
+db.restaurants.find({ price: { $in: [16.20] } }).pretty()
+
+// 5. Demonstrate a search for null referring the key value pair where you had included null in step one. Then show a search for not null. 
+db.restaurants.find({ isOrdered: { $exists: true } }).pretty()
+db.restaurants.find({ isOrdered: { $exists: false } }).pretty()
+
+db.restaurants.find().pretty()
+//6. Demonstrate a multi document update where you increase a mumeric key value pair by 10. Show the increase with a find and then decrease that same key value pair by 10 and reshow the result. Then show a single document update where you increase a numeric value by 5, demonstrate it worked and then reverse it.
+
+db.restaurants.updateMany({}, {$inc: {menu: 10}})
+
+// showing the result after increments
+db.restaurants.find().pretty()
+
+// decreements
+db.restaurants.updateMany({}, { $inc: { menu: -10 } })
+db.restaurants.find().pretty()
+
+//increment updateOne..
+db.restaurants.updateOne({}, { $inc: { menu: 5 } })
+
+// checking to see if the update was made..
+db.restaurants.find().pretty()
+
+// reverse..
+db.restaurants.updateOne({}, { $inc: { menu: -5 } })
+
+db.restaurants.find().pretty()
+
+//7. Add a key value pair to one of the documents in your collection.Make this fit with the theme of your collection.Show this, then remove it and demonstrate the key value pair was successfully removed.
+
+db.restaurants.updateOne({ restaurantsName: "Basil Box" }, { $set: { categories: "Pizzeria" } });
+db.restaurants.find({ restaurantsName: "Basil Box" });
+db.restaurants.updateOne({ restaurantsName: "Basil Box" }, { $unset: { categories: "" } });
+db.restaurants.find({ restaurantsName: "Basil Box" });
+
+//8. Demonstrate replacing one of your documents with a doument that includes an embedded document in your collection. Show it first and then update something in the embedded document.
+
+db.restaurants.insertOne({
+    "_id": 103,
+    restaurantsName: "Thai Bamboo",
+    menu_items: ["Fresh Spring Rolls", "Crispy Spring Rolls", "Steamed Shrimp Pork Rolls", "Mango Salad"],
+    price: 18.95,
+    menu: 20
+}
+);
+
+db.restaurants.find().pretty();
+db.restaurants.deleteOne({_id: 103})
+
+// doing a replacement
+
+db.restaurants.replaceOne(
+    {
+        "_id": 103
+    },
+    {
+        "_id": 103,
+        restaurantsName: "Sofra Istanbul",
+        menu_items: ["Hummus with Mushroom", "Falafel Plate", "Baba Ganoush", "Hummus with Tahini", "Creamy Yogurt"],
+        menu: 20,
+        priceRange: [20.80, 9.5, 6.4, 10.5],
+        price: 47.2,
+        categories:
+        {
+            Salads: "Garden Salad",
+            Soup: "Yayla Soup",
+            Seafood: "Dorado (Cupra)"
+        }
+    }
+);
+
+db.restaurants.find().pretty();
+
+
+db.restaurants.updateOne(
+    {
+        _id: 103
+    },
+    {
+        $set: { "categories.Soup": "Festus Osayi" }
+    }
+);
+
+db.restaurants.find().pretty();
+
+
+
+
+
+
+
+
+
+
+
+
+
