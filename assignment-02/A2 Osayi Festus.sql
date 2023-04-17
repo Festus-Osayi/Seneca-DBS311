@@ -589,44 +589,44 @@ BEGIN
   IF CALCPRICE < 1 THEN
     CALCPRICE := 0;
   ELSE
-    CALCPRICE := ((PRODUCTPRICE - SALEPRICE ) / SALEPRICE) * 100;
+    CALCPRICE := (SALEPRICE - PRODUCTPRICE);
   END IF;
-  RETURN TRUNC(CALCPRICE, 2);
+  RETURN (CALCPRICE);
 END CALCMARKUP;
  -- in a select statement in the select list
 SELECT
   PRODUCTNAME,
   BUYPRICE,
   MSRP,
-  CALCMARKUP(BUYPRICE,
-  MSRP) "Markup Price"
+  CALCMARKUP(MSRP,
+  BUYPRICE) "Markup Price"
 FROM
   PRODUCTS;
  -- In a where clause
 SELECT
   PRODUCTNAME,
   BUYPRICE,
-  MSRP  "Minimun msrp",
-  CALCMARKUP(BUYPRICE,
-  MSRP) "Markup Price"
+  MSRP      "Minimun msrp",
+  CALCMARKUP(MSRP,
+  BUYPRICE) "Markup Price"
 FROM
   PRODUCTS
 WHERE
-  CALCMARKUP(BUYPRICE,
-  MSRP) BETWEEN 50
+  CALCMARKUP(MSRP,
+  BUYPRICE) BETWEEN 50
   AND 100;
  -- In a order by clause
 SELECT
   PRODUCTNAME,
   BUYPRICE,
-  MSRP  "Minimun msrp",
-  CALCMARKUP(BUYPRICE,
-  MSRP) "Markup Price"
+  MSRP      "Minimun msrp",
+  CALCMARKUP(MSRP,
+  BUYPRICE) "Markup Price"
 FROM
   PRODUCTS
 ORDER BY
-  CALCMARKUP(BUYPRICE,
-  MSRP);
+  CALCMARKUP(MSRP,
+  BUYPRICE);
  --Q2. PATIENTA and INSURANCEA tables have been provided for you.
  --Use those tables for your assignment Adapt your lab stored procedure
  --to reject any updates where a company tries to pay 25% or less.
@@ -770,41 +770,63 @@ END;
  --trigger to store a row in a new table called DCOLLECTION
  --(difficult collections). The hospital will go through these entries
  --and try to get the insurance company to pay a higher percentage.
- CREATE TRIGGER DCOLLECTION_TRIGGER AFTER
-UPDATE ON PATIENTA FOR EACH ROW BEGIN IF (
-  NEW.AMOUNTOWING > 10000 AND NEW.PERCENTPAID < 40
-) THEN INSERT INTO DCOLLECTIONS (
-  PATIENTNO,
-  INSNUM,
-  PERCENTPAID,
-  CHARGE,
-  PAIDBYINS,
-  AMTOWING,
-  PROBLEM
-) VALUES (
-  :NEW.PATIENTNO,
-  :NEW.INSNUM,
-  :NEW.PERCENTPAID,
-  :NEW.CHARGE,
-  :NEW.PAIDBYINS,
-  :NEW.AMTOWING,
-  :NEW.PROBLEM
-);
-END IF;
+ CREATE TABLE DCOLLECTIONS ( PATIENTNO NUMBER, INSNUM NUMBER, PERCENTPAID NUMBER, CHARGE NUMBER, PAIDBYINS NUMBER, AMTOWING NUMBER, PROBLEM CHAR (25 BYTE) );
+ --creating the trigger
+ CREATE OR REPLACE TRIGGER DIFFICULT_COLLECTION AFTER
+UPDATE ON PATIENTA FOR EACH ROW DECLARE PERCENT_PAID NUMBER;
+AMTOWN NUMBER;
+BEGIN
+ -- Compute the percentages paid
+  IF :NEW.INSUREPAYS < 0 THEN
+    PERCENT_PAID := 0;
+    AMTOWN:= 0;
+  ELSE
+    PERCENT_PAID:= ROUND((:NEW.INSUREPAYS/:NEW.CHARGE)*100, 0);
+    AMTOWN:= :NEW.CHARGE - :NEW.INSUREPAYS;
+  END IF;
+  IF PERCENT_PAID < 40 AND AMTOWN > 10000 THEN
+    INSERT INTO DCOLLECTIONS (
+      PATIENTNO,
+      INSNUM,
+      PERCENTPAID,
+      CHARGE,
+      PAIDBYINS,
+      AMTOWING,
+      PROBLEM
+    ) VALUES (
+      :NEW.PATIENTNO,
+      :NEW.PINSURNUM,
+      PERCENT_PAID,
+      :NEW.CHARGE,
+      :NEW.INSUREPAYS,
+      AMTOWN,
+      'High Debt Still Owing'
+    );
+  END IF;
 END;
-/
-
---Q5.Create a stored procedure that uses a cursor for a join of any two
---of ORDERS, PRODUCTS, ORDERDETAILS and CUSTOMERS. In your WHERE condition,
---have a minimum of five rows returned. Allow one or two parameters to be passed
---to your stored procedure that limits the amount of rows returned.
---The cursor should accept these parameter and be capable of producing different
---results each time it is used. Show your output with dbms_output.put_line.
-
-CREATE OR REPLACE PROCEDURE SHOW_ORDER_DETAILS (
-  ORDER_NUM IN NUMBER,
-  LIMIT_NUM IN NUMBER
-) IS
+ --Execution of the trigger functionality
+ --as specified on the word documents
+ SET SERVEROUTPUT ON;
+EXECUTE INPAYS(888, 80);
+SELECT
+  *
+FROM
+  DCOLLECTIONS;
+ --In this case the rate was below 40% and a few patients still owe more
+ --than $10,000 so rows are added to the DCOLLECTIONS table.
+ SET SERVEROUTPUT ON;
+EXECUTE INPAYS(888, 39);
+SELECT
+  *
+FROM
+  DCOLLECTIONS;
+ --Q5.Create a stored procedure that uses a cursor for a join of any two
+ --of ORDERS, PRODUCTS, ORDERDETAILS and CUSTOMERS. In your WHERE condition,
+ --have a minimum of five rows returned. Allow one or two parameters to be passed
+ --to your stored procedure that limits the amount of rows returned.
+ --The cursor should accept these parameter and be capable of producing different
+ --results each time it is used. Show your output with dbms_output.put_line.
+ CREATE OR REPLACE PROCEDURE SHOW_ORDER_DETAILS ( ORDER_NUM IN NUMBER, LIMIT_NUM IN NUMBER ) IS
   ROWCOUNT NUMBER;
   CURSOR ORDER_DETAILS IS
     SELECT
